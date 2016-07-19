@@ -1,349 +1,399 @@
 package com.insurance.app;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
 import android.media.MediaScannerConnection;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 import android.widget.ZoomControls;
-import com.itextpdf.text.pdf.PdfWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
-@SuppressLint({"NewApi"})
-@TargetApi(9)
+@TargetApi(Build.VERSION_CODES.GINGERBREAD)
+@SuppressLint("NewApi")
 public class CameraActivity extends Activity {
-    private static String category;
-    private static String incidentId;
-    private static String prefix;
-    private boolean cameraFront;
-    private FrameLayout cameraPreview;
-    OnClickListener captrureListener;
-    private Button capture;
-    private Button flash;
-    OnClickListener flashListener;
-    private boolean isFlashOn;
-    private Camera mCamera;
-    private PictureCallback mPicture;
-    private CameraPreview mPreview;
-    File mediaStorageDir;
-    private Context myContext;
-    private int photoCount;
-    private boolean safeToTakePicture;
-    private Button switchCamera;
-    OnClickListener switchCameraListener;
-    private ZoomControls zoomControls;
-    OnClickListener zoomInListener;
-    OnClickListener zoomOutListener;
 
-    /* renamed from: com.insurance.app.CameraActivity.1 */
-    class C00001 implements OnClickListener {
-        C00001() {
-        }
+	private Camera mCamera;
+	private CameraPreview mPreview;
+	private PictureCallback mPicture;
+	private Button capture, switchCamera,flash;
+	private Context myContext;
+	private FrameLayout cameraPreview;
+	private boolean cameraFront = false;
+	private boolean safeToTakePicture=false;
+	private boolean isFlashOn=false;
+	private static String incidentId;
+	private static String category;
+	private static String prefix;
+	private int photoCount = 1;
+	File mediaStorageDir;
+	private ZoomControls zoomControls;
 
-        public void onClick(View v) {
-            CameraActivity.this.zoomCamera(true);
-        }
-    }
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_camera_port);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		myContext = this;
+		getData();
+		createFolder();
+		initialize();
 
-    /* renamed from: com.insurance.app.CameraActivity.2 */
-    class C00012 implements OnClickListener {
-        C00012() {
-        }
+	}
 
-        public void onClick(View v) {
-            CameraActivity.this.zoomCamera(false);
-        }
-    }
+	private void createFolder() {
+		// make a new file directory inside the "sdcard" folder
+		String path = Wrapper.APP_FOLDERNAME + File.separator + incidentId
+				+ File.separator + category + File.separator;
+		mediaStorageDir = new File(path);
 
-    /* renamed from: com.insurance.app.CameraActivity.3 */
-    class C00023 implements OnClickListener {
-        C00023() {
-        }
+		Log.e("INSURANCE", "Path:" + mediaStorageDir);
+		if (!mediaStorageDir.exists()) {
+			mediaStorageDir.mkdirs();
+			mediaStorageDir.setWritable(true);
+		}
+		photoCount = mediaStorageDir.list().length;  //Fix for file name increment
+		photoCount++;
+		MediaScannerConnection.scanFile(myContext, new String[] {mediaStorageDir.getPath()}, null, null);
+	}
 
-        public void onClick(View v) {
-            if (CameraActivity.this.hasFlash()) {
-                Parameters p = CameraActivity.this.mCamera.getParameters();
-                if (CameraActivity.this.isFlashOn) {
-                    Log.i("info", "torch is turn off!");
-                    p.setFlashMode("off");
-                    CameraActivity.this.mCamera.setParameters(p);
-                    CameraActivity.this.isFlashOn = false;
-                    return;
-                }
-                Log.i("info", "torch is turn on!");
-                p.setFlashMode("torch");
-                CameraActivity.this.mCamera.setParameters(p);
-                CameraActivity.this.isFlashOn = true;
-                return;
-            }
-            Toast.makeText(CameraActivity.this.myContext, "No Camera flash present", Toast.LENGTH_LONG);
-            Log.d("No Flash", "Camera doesnt have flash");
-        }
-    }
+	private void getData() {
+		Bundle bundle = getIntent().getExtras();
+		incidentId = bundle.getString("IncidentId");
+		category = bundle.getString("Category");
+		prefix = bundle.getString("Prefix");
+	}
 
-    /* renamed from: com.insurance.app.CameraActivity.4 */
-    class C00034 implements OnClickListener {
-        C00034() {
-        }
+	public void initialize() {
+		cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
+		mPreview = new CameraPreview(myContext, mCamera);
+		cameraPreview.addView(mPreview);
 
-        public void onClick(View v) {
-            if (Camera.getNumberOfCameras() > 1) {
-                CameraActivity.this.releaseCamera();
-                CameraActivity.this.chooseCamera();
-                return;
-            }
-            Toast.makeText(CameraActivity.this.myContext, "No camera", Toast.LENGTH_LONG).show();
-        }
-    }
+		capture = (Button) findViewById(R.id.button_capture);
+		capture.setOnClickListener(captrureListener);
+		
+		flash=(Button)findViewById(R.id.button_flash);
+		flash.setOnClickListener(flashListener);
 
-    /* renamed from: com.insurance.app.CameraActivity.5 */
-    class C00045 implements OnClickListener {
-        C00045() {
-        }
+		switchCamera = (Button) findViewById(R.id.button_ChangeCamera);
+		switchCamera.setOnClickListener(switchCameraListener);
+		
+		zoomControls = (ZoomControls) findViewById(R.id.zoomControls);
+		zoomControls.setIsZoomInEnabled(true);
+		zoomControls.setIsZoomOutEnabled(true);
+		zoomControls.setOnZoomInClickListener(zoomInListener);
+		zoomControls.setOnZoomOutClickListener(zoomOutListener);
+	}
+	
+	OnClickListener zoomInListener = new OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			zoomCamera(true);
+		}
+	};
 
-        public void onClick(View v) {
-            if (CameraActivity.this.safeToTakePicture) {
-                CameraActivity.this.mCamera.takePicture(null, null, CameraActivity.this.mPicture);
-                CameraActivity.this.safeToTakePicture = false;
-            }
-        }
-    }
+	OnClickListener zoomOutListener = new OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			zoomCamera(false);
 
-    /* renamed from: com.insurance.app.CameraActivity.6 */
-    class C00056 implements PictureCallback {
-        C00056() {
-        }
+		}
+	};
 
-        public void onPictureTaken(byte[] data, Camera camera) {
-            File pictureFile = CameraActivity.getOutputMediaFile(CameraActivity.this.mediaStorageDir, CameraActivity.this.photoCount);
-            if (pictureFile != null) {
-                try {
-                    FileOutputStream fos = new FileOutputStream(pictureFile);
-                    fos.write(data);
-                    fos.flush();
-                    fos.close();
-                    Toast.makeText(CameraActivity.this.myContext, "Picture saved: " + pictureFile.getName(), Toast.LENGTH_LONG).show();
-                    CameraActivity cameraActivity = CameraActivity.this;
-                    cameraActivity.photoCount = cameraActivity.photoCount + 1;
-                    MediaScannerConnection.scanFile(CameraActivity.this.myContext, new String[]{pictureFile.getPath()}, null, null);
-                } catch (FileNotFoundException e) {
-                } catch (IOException e2) {
-                }
-                CameraActivity.this.mPreview.refreshCamera(CameraActivity.this.mCamera);
-                CameraActivity.this.safeToTakePicture = true;
-            }
-        }
-    }
+	
+	OnClickListener flashListener=new OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			if(hasFlash()){				
+				Parameters p = mCamera.getParameters();				
+				if (isFlashOn) {
+					Log.i("info", "torch is turn off!");
+					p.setFlashMode(Parameters.FLASH_MODE_OFF);
+					mCamera.setParameters(p);
+					isFlashOn = false;
+				} else {
+					Log.i("info", "torch is turn on!");
+					p.setFlashMode(Parameters.FLASH_MODE_TORCH);
+					mCamera.setParameters(p);
+					isFlashOn = true;
+				}
+			} else {
+				Toast.makeText(myContext, "No Camera flash present", Toast.LENGTH_LONG);
+				Log.d("No Flash","Camera doesnt have flash");
+				}
+		}
+	};
+	
+	private boolean hasFlash(){
+	    Parameters params = mCamera.getParameters();
+	    List<String> flashModes = params.getSupportedFlashModes();
+	    if(flashModes == null) {
+	        return false;
+	    } else {
+	    	return true;
+	    }
+	}
 
-    public CameraActivity() {
-        this.cameraFront = false;
-        this.safeToTakePicture = false;
-        this.isFlashOn = false;
-        this.photoCount = 1;
-        this.zoomInListener = new C00001();
-        this.zoomOutListener = new C00012();
-        this.flashListener = new C00023();
-        this.switchCameraListener = new C00034();
-        this.captrureListener = new C00045();
-    }
+	OnClickListener switchCameraListener = new OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			// get the number of cameras
+			int camerasNumber = Camera.getNumberOfCameras();
+			if (camerasNumber > 1) {
+				// release the old camera instance
+				// switch camera, from the front and the back and vice versa
+				releaseCamera();
+				chooseCamera();
+			} else {
+				Toast toast = Toast.makeText(myContext,
+						"No camera",
+						Toast.LENGTH_LONG);
+				toast.show();
+			}
+		}
+	};
 
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_camera_port);
-        getWindow().addFlags(PdfWriter.PageModeUseOutlines);
-        this.myContext = this;
-        getData();
-        createFolder();
-        initialize();
-    }
+	OnClickListener captrureListener = new OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			if(safeToTakePicture==true){
+				mCamera.takePicture(null, null, mPicture);
+				safeToTakePicture=false;
+			}					}
+	};
+	
+	public void zoomCamera(boolean zoomInOrOut) {
+		if (mCamera != null) {
+			Parameters parameter = mCamera.getParameters();
 
-    private void createFolder() {
-        this.mediaStorageDir = new File(Wrapper.APP_FOLDERNAME + File.separator + incidentId + File.separator + category + File.separator);
-        Log.e("INSURANCE", "Path:" + this.mediaStorageDir);
-        if (!this.mediaStorageDir.exists()) {
-            this.mediaStorageDir.mkdirs();
-            this.mediaStorageDir.setWritable(true);
-        }
-        this.photoCount = this.mediaStorageDir.list().length;
-        this.photoCount++;
-        MediaScannerConnection.scanFile(this.myContext, new String[]{this.mediaStorageDir.getPath()}, null, null);
-    }
+			if (parameter.isZoomSupported()) {
+				int MAX_ZOOM = parameter.getMaxZoom();
+				int currnetZoom = parameter.getZoom();
+				if (zoomInOrOut && (currnetZoom < MAX_ZOOM && currnetZoom >= 0)) {
+					parameter.setZoom(currnetZoom + 4);
+				} else if (!zoomInOrOut
+						&& (currnetZoom <= MAX_ZOOM && currnetZoom > 0)) {
+					parameter.setZoom(currnetZoom - 4);
+				}
+			} else
+				Toast.makeText(myContext, "Zoom Not Avaliable",
+						Toast.LENGTH_LONG).show();
 
-    private void getData() {
-        Bundle bundle = getIntent().getExtras();
-        incidentId = bundle.getString("IncidentId");
-        category = bundle.getString("Category");
-        prefix = bundle.getString("Prefix");
-    }
+			mCamera.setParameters(parameter);
+		}
+	}
 
-    public void initialize() {
-        this.cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
-        this.mPreview = new CameraPreview(this.myContext, this.mCamera);
-        this.cameraPreview.addView(this.mPreview);
-        this.capture = (Button) findViewById(R.id.button_capture);
-        this.capture.setOnClickListener(this.captrureListener);
-        this.flash = (Button) findViewById(R.id.button_flash);
-        this.flash.setOnClickListener(this.flashListener);
-        this.switchCamera = (Button) findViewById(R.id.button_ChangeCamera);
-        this.switchCamera.setOnClickListener(this.switchCameraListener);
-        this.zoomControls = (ZoomControls) findViewById(R.id.zoomControls);
-        this.zoomControls.setIsZoomInEnabled(true);
-        this.zoomControls.setIsZoomOutEnabled(true);
-        this.zoomControls.setOnZoomInClickListener(this.zoomInListener);
-        this.zoomControls.setOnZoomOutClickListener(this.zoomOutListener);
-    }
 
-    private boolean hasFlash() {
-        if (this.mCamera.getParameters().getSupportedFlashModes() == null) {
-            return false;
-        }
-        return true;
-    }
+	@SuppressLint("NewApi")
+	public void chooseCamera() {
+		// if the camera preview is the front
+		if (cameraFront) {
+			int cameraId = findBackFacingCamera();
+			if (cameraId >= 0) {
+				// open the backFacingCamera
+				// set a picture callback
+				// refresh the preview
 
-    public void zoomCamera(boolean zoomInOrOut) {
-        if (this.mCamera != null) {
-            Parameters parameter = this.mCamera.getParameters();
-            if (parameter.isZoomSupported()) {
-                int MAX_ZOOM = parameter.getMaxZoom();
-                int currnetZoom = parameter.getZoom();
-                if (zoomInOrOut && currnetZoom < MAX_ZOOM && currnetZoom >= 0) {
-                    parameter.setZoom(currnetZoom + 4);
-                } else if (!zoomInOrOut && currnetZoom <= MAX_ZOOM && currnetZoom > 0) {
-                    parameter.setZoom(currnetZoom - 4);
-                }
-            } else {
-                Toast.makeText(this.myContext, "Zoom Not Avaliable", Toast.LENGTH_LONG).show();
-            }
-            this.mCamera.setParameters(parameter);
-        }
-    }
+				mCamera = Camera.open(cameraId);
+				mPicture = getPictureCallback();
+				mPreview.refreshCamera(mCamera);
+			}
+		} else {
+			int cameraId = findFrontFacingCamera();
+			if (cameraId >= 0) {
+				// open the backFacingCamera
+				// set a picture callback
+				// refresh the preview
 
-    @SuppressLint({"NewApi"})
-    public void chooseCamera() {
-        int cameraId;
-        if (this.cameraFront) {
-            cameraId = findBackFacingCamera();
-            if (cameraId >= 0) {
-                this.mCamera = Camera.open(cameraId);
-                this.mPicture = getPictureCallback();
-                this.mPreview.refreshCamera(this.mCamera);
-                return;
-            }
-            return;
-        }
-        cameraId = findFrontFacingCamera();
-        if (cameraId >= 0) {
-            this.mCamera = Camera.open(cameraId);
-            this.mPicture = getPictureCallback();
-            this.mPreview.refreshCamera(this.mCamera);
-        }
-    }
+				mCamera = Camera.open(cameraId);
+				mPicture = getPictureCallback();
+				mPreview.refreshCamera(mCamera);
+			}
+		}
+	}
 
-    private PictureCallback getPictureCallback() {
-        return new C00056();
-    }
+	private PictureCallback getPictureCallback() {
+		PictureCallback picture = new PictureCallback() {
 
-    private int findBackFacingCamera() {
-        int numberOfCameras = Camera.getNumberOfCameras();
-        for (int i = 0; i < numberOfCameras; i++) {
-            CameraInfo info = new CameraInfo();
-            Camera.getCameraInfo(i, info);
-            if (info.facing == 0) {
-                int cameraId = i;
-                this.cameraFront = false;
-                return cameraId;
-            }
-        }
-        return -1;
-    }
+			@Override
+			public void onPictureTaken(byte[] data, Camera camera) {
+				// make a new picture file
+				File pictureFile = getOutputMediaFile(mediaStorageDir,
+						photoCount);
 
-    private int findFrontFacingCamera() {
-        int numberOfCameras = Camera.getNumberOfCameras();
-        for (int i = 0; i < numberOfCameras; i++) {
-            CameraInfo info = new CameraInfo();
-            Camera.getCameraInfo(i, info);
-            if (info.facing == 1) {
-                int cameraId = i;
-                this.cameraFront = true;
-                return cameraId;
-            }
-        }
-        return -1;
-    }
+				if (pictureFile == null) {
+					return;
+				}
+				try {
+					// write the file
+					FileOutputStream fos = new FileOutputStream(pictureFile);
+					fos.write(data);
+					fos.flush();
+					fos.close();
+					Toast toast = Toast.makeText(myContext, "Picture saved: "
+							+ pictureFile.getName(), Toast.LENGTH_LONG);
+					toast.show();
+					photoCount++;
+					
+					MediaScannerConnection.scanFile(myContext, new String[] {pictureFile.getPath()}, null, null);
 
-    private static File getOutputMediaFile(File folder, int count) {
-        return new File(folder, prefix + "_" + count + ".jpg");
-    }
+				} catch (FileNotFoundException e) {
+				} catch (IOException e) {
+				}
 
-    private void releaseCamera() {
-        if (this.mCamera != null) {
-            this.mCamera.release();
-            this.mCamera = null;
-        }
-    }
+				// refresh camera to continue preview
+				mPreview.refreshCamera(mCamera);
+				safeToTakePicture=true;
+			}
+		};
+		return picture;
+	}
 
-    public void onResume() {
-        super.onResume();
-        if (!hasCamera(this.myContext)) {
-            Toast.makeText(this.myContext, "Sorry, your phone does not have a camera!", Toast.LENGTH_LONG).show();
-            finish();
-        }
-        if (this.mCamera == null) {
-            if (findFrontFacingCamera() < 0) {
-                Toast.makeText(this, "No front facing camera found.", Toast.LENGTH_LONG).show();
-                this.switchCamera.setVisibility(View.INVISIBLE);
-            }
-            this.mCamera = Camera.open(findBackFacingCamera());
-            this.mPicture = getPictureCallback();
-            this.mPreview.refreshCamera(this.mCamera);
-            this.safeToTakePicture = true;
-        }
-    }
+	private int findBackFacingCamera() {
+		int cameraId = -1;
+		// Search for the back facing camera
+		// get the number of cameras
+		int numberOfCameras = Camera.getNumberOfCameras();
+		// for every camera check
+		for (int i = 0; i < numberOfCameras; i++) {
+			CameraInfo info = new CameraInfo();
+			Camera.getCameraInfo(i, info);
+			if (info.facing == CameraInfo.CAMERA_FACING_BACK) {
+				cameraId = i;
+				cameraFront = false;
+				break;
+			}
+		}
+		return cameraId;
+	}
 
-    private boolean hasCamera(Context context) {
-        if (context.getPackageManager().hasSystemFeature("android.hardware.camera")) {
-            return true;
-        }
-        return false;
-    }
+	private int findFrontFacingCamera() {
+		int cameraId = -1;
+		// Search for the front facing camera
+		int numberOfCameras = Camera.getNumberOfCameras();
+		for (int i = 0; i < numberOfCameras; i++) {
+			CameraInfo info = new CameraInfo();
+			Camera.getCameraInfo(i, info);
+			if (info.facing == CameraInfo.CAMERA_FACING_FRONT) {
+				cameraId = i;
+				cameraFront = true;
+				break;
+			}
+		}
+		return cameraId;
+	}
 
-    protected void onPause() {
-        super.onPause();
-        releaseCamera();
-    }
 
-    public void onBackPressed() {
-        try {
-            Parameters p = this.mCamera.getParameters();
-            p.setFlashMode("off");
-            this.mCamera.setParameters(p);
-        } catch (Exception e) {
-        }
-        int filesCount = 0;
-        try {
-            filesCount = new File(Wrapper.APP_FOLDERNAME + File.separator + incidentId + File.separator + category + File.separator).list().length;
-        } catch (Exception e2) {
-        }
-        Bundle camData = new Bundle();
-        camData.putInt("RESULT", filesCount);
-        Intent intent = new Intent();
-        intent.putExtras(camData);
-        setResult(-1, intent);
-        finish();
-    }
+	private static File getOutputMediaFile(File folder, int count) {
+
+		File imageFile;
+		String imageFileName = prefix + "_" + count + ".jpg";
+		
+		imageFile = new File(folder, imageFileName);
+		return imageFile;
+	}
+
+	private void releaseCamera() {
+		// stop and release camera
+		if (mCamera != null) {
+			mCamera.release();
+			mCamera = null;
+		}
+	}
+
+	public void onResume() {
+		super.onResume();
+		if (!hasCamera(myContext)) {
+			Toast toast = Toast.makeText(myContext,
+					"Sorry, your phone does not have a camera!",
+					Toast.LENGTH_LONG);
+			toast.show();
+			finish();
+		}
+		if (mCamera == null) {
+			// if the front facing camera does not exist
+			if (findFrontFacingCamera() < 0) {
+				Toast.makeText(this, "No front facing camera found.",
+						Toast.LENGTH_LONG).show();
+				switchCamera.setVisibility(View.GONE);
+			}
+			mCamera = Camera.open(findBackFacingCamera());
+			mPicture = getPictureCallback();
+			mPreview.refreshCamera(mCamera);
+			safeToTakePicture=true;
+
+		}
+	}
+
+	private boolean hasCamera(Context context) {
+		// check if the device has camera
+		if (context.getPackageManager().hasSystemFeature(
+				PackageManager.FEATURE_CAMERA)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		// when on Pause, release camera in order to be used from other
+		// applications
+		releaseCamera();
+	}
+
+	@Override
+	public void onBackPressed() 
+	{
+		//Turn off Flash Light
+		try
+		{
+			Parameters p = mCamera.getParameters();				
+			p.setFlashMode(Parameters.FLASH_MODE_OFF);
+			mCamera.setParameters(p);
+		}
+		catch(Exception e){}
+		//Read images count 
+		int filesCount =0;
+		try
+		{
+			String path = Wrapper.APP_FOLDERNAME + File.separator + incidentId 	+ File.separator + category + File.separator;
+			File mediaStorageDir = new File(path);
+			filesCount = mediaStorageDir.list().length;
+		}
+		catch(Exception e){}
+		
+		Bundle camData = new Bundle();
+		camData.putInt("RESULT", filesCount);
+		Intent intent = new Intent();
+	    intent.putExtras(camData);
+	    setResult(RESULT_OK, intent);
+		this.finish();
+	}
 }
+
