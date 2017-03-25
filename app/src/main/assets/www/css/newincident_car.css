@@ -539,12 +539,12 @@ a
 #locRefresh{
     display: block;
     /* -webkit-box-flex: 3; */
-    width: 10%;
+    width: 50px;
     background-image: url("../images/refresh.png");
     background-size: 100%;
     background-repeat: no-repeat;
     margin-left: 3%;
-    margin-top: 2%;
+    margin-top: 0px;
     height: 60px;
 }
 
