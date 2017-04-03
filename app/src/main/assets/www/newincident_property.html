@@ -52,11 +52,24 @@
 			<!--  <div class="incident_gps center_hori_ver" id="getLocation">
 				Fetch Incident Location: (<span id="lblGPSLatitude"></span>, <span id="lblGPSLongitude"></span>)
 			</div>-->
-			<div id="locContainer">
-                <div id="locRefresh"></div>
-                <div class="incident_gps center_hori_ver" id="getLocation">
-                    My Location: (<span id="lblGPSLatitude"></span>, <span id="lblGPSLongitude"></span>)
-                </div>
+			<div id="locContainer"  style="border:0px solid yellow;" cellspacing=0 cellpadding=0>
+				<table style="width:100%">
+					<tr>
+						<td width="45%">
+							<div class="getLocationDiv" id="getLocationDiv">
+								Get Location
+							</div>
+						</td>
+						<td  width="55%">
+							<div class="incident_gps center_hori_ver" id="getLocation">
+								My Location: (<span id="lblGPSLatitude"></span><span id="lblGPSLongitude"></span>)
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--<div id="locRefresh"></div>-->
+
 			<div class="incident_runner" id="scroll_container">
 			    <!--<div class="runner_box" id="box1">
 					<div class="innerStyle">

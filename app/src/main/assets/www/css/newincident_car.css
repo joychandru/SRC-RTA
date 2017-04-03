@@ -420,24 +420,36 @@ a
 {
 	background-size:60% 100% !important;
 }
+.getLocationDiv
+{
+    margin-left:1%;
+     height:40px;
+     border:1px solid #A0B4AA;
+     border-radius:4px;
+     font-size:14px;
+     text-shadow:0px 0px 2px #000;
+     color:white;
+     text-align:center;
+     background-color:#1EB2E2;
+     display: -webkit-box;
+     -webkit-box-align: center;
+     -webkit-box-pack: center;
+}
 .incident_gps
 {
-	left:1%;
-    right:1%;
-    position:relative;
-    top:3px;
-    font-size:11px;
-    -webkit-overflow-scrolling:touch;
-    width:80%;
-    /*    margin:0 auto;*/
-    margin-top:5px;
-    height:30px;
-    border:1px solid #A0B4AA;
-    border-radius:4px;
-    font-size:14px;
-    text-shadow:0px 0px 2px #000;
-    color:white;
-    background-color:#1EB2E2;
+	margin-left:0;
+	margin-right:1%;
+     height:40px;
+     border:1px solid #A0B4AA;
+     border-radius:4px;
+     font-size:14px;
+     text-shadow:0px 0px 2px #000;
+     color:white;
+     text-align:center;
+     background-color:#1EB245;
+     display: -webkit-box;
+     -webkit-box-align: center;
+     -webkit-box-pack: center;
 }
 .photoPanel
 {

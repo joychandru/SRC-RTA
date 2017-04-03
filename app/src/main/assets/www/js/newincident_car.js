@@ -714,6 +714,53 @@ NEWINCIDENT.getLocation = function(IncidentID)
 		Wrapper.ShowMap($("#lblGPSLatitude").text(),$("#lblGPSLongitude").text(),sessionStorage.IncidentID);
 	}
 };
+NEWINCIDENT.getLocation2 = function(IncidentID)
+{
+alert("called");
+	//show map
+    //**************TEST *****************
+    if(sessionStorage.IncidentType!="EDIT" && NEWINCIDENT.isChanged!= "true")
+    {
+    	var responseWrapper = Wrapper.getLocation(sessionStorage.IncidentID,
+    		"NEWINCIDENT.getLocation_success",
+    		"NEWINCIDENT.getLocation_failure");
+
+    	setTimeout(function()
+    	{
+    		if(responseWrapper =="OFF")
+	    	{
+    			alert("Switch ON GPS to update Location");
+	    		var latitude="No Location";
+	    		var longitude="No Location";
+			}
+    		else if(responseWrapper=="NO")
+	    	{
+    			alert("No Location details found.");
+	    		var latitude="No Location";
+	    		var longitude="No Location";
+			}
+	    	else
+	    	{
+	    		var location=responseWrapper.split(',');
+	    		var latitude=location[0];
+	    		var longitude=location[1];
+			}
+
+			console.log(responseWrapper);
+			console.log("latitude:"+latitude);
+			console.log("longitude:"+longitude);
+
+			$("#lblGPSLatitude").text(latitude);
+			$("#lblGPSLongitude").text(longitude);
+    	}, 100);
+		return;
+	}
+    else if(sessionStorage.IncidentType =="EDIT" &&  $("#lblGPSLatitude").text().toUpperCase()=="NO LOCATION" &&
+    		$("#lblGPSLongitude").text().toUpperCase()=="NO LOCATION")
+    {
+    	alert("This incident is already created you cannot update location.");
+    }
+};
 NEWINCIDENT.isChanged = "false";
 NEWINCIDENT.pushLocation = function(lat, lng, isChanged)
 {
@@ -724,6 +771,7 @@ NEWINCIDENT.pushLocation = function(lat, lng, isChanged)
 }
 NEWINCIDENT.getLocation_success = function(response)
 {
+alert("Location success," + response);
 	if(response =="OFF")
 	{
 		alert("Switch ON GPS to update Location");
@@ -955,6 +1003,7 @@ $(document).ready(function()
 	$("#sendEmail").on("click", NEWINCIDENT.emailReport);
 	$("#recordAudio").on("touchstart", NEWINCIDENT.recordAudio);
 	$("#getLocation").on("click", NEWINCIDENT.getLocation);
+	$("#getLocationDiv").on("click", NEWINCIDENT.getLocation2);
 	
 	//New Event - 06-Apr-2015
 	$("#per_txtWeatherDate").on("click",NEWINCIDENT.selectDate_click);
