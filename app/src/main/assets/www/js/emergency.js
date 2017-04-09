@@ -77,8 +77,17 @@ EMERGENCY.HieInputBox = function()
 	$("#txtContactNumber").val("");
 	$(".addNewBoxOverlay").hide();
 };
+
+
+
 EMERGENCY.loadList = function()
 {
+   /*Wrapper.GetEmergencyContactDetails("", "",
+   "EMERGENCY.OnEmergencyContList_success",
+   "EMERGENCY.OnEmergencyContList_failure")
+
+    return;*/
+
 	var emergencyList = Wrapper.fetchEmergencyList();
 	
 	var data = JSON.parse(emergencyList);
@@ -141,6 +150,16 @@ EMERGENCY.loadList = function()
 		$(".scroll_wrapper").append(template);
 	}*/
 };
+
+EMERGENCY.OnEmergencyContList_success = function(args)
+{
+    alert(args);
+}
+EMERGENCY.OnEmergencyContList_failure = function(args)
+{
+    alert(args);
+}
+
 EMERGENCY.favourite_click = function(e)
 {	
 	if(e) e.preventDefault();

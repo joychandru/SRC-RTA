@@ -348,8 +348,7 @@ NEWINCIDENT.createNewIncident = function(defaultCategory)
 	$("#txtPoliceReferenceNo").val("");
 	$("#lblNoOfInjuryPhotos").text("0");
 	$("#lblNoOfOtherPhotos").text("0");
-	$("#lblGPSLatitude").text(latitude);
-	$("#lblGPSLongitude").text(longitude);
+	NEWINCIDENT.FillLatLong(latitude, longitude);
 	$("#isSynched").hide();
 	
 	//Crash Details
@@ -669,7 +668,6 @@ NEWINCIDENT.recordAudio_failure = function(response)
 };
 NEWINCIDENT.getLocation = function(IncidentID)
 {
-    alert("calling " + sessionStorage.IncidentType + "," + NEWINCIDENT.isChanged);
 	//show map
     //**************TEST *****************
     if(sessionStorage.IncidentType!="EDIT" && NEWINCIDENT.isChanged!= "true") 
@@ -703,8 +701,7 @@ NEWINCIDENT.getLocation = function(IncidentID)
 			console.log("latitude:"+latitude);
 			console.log("longitude:"+longitude);
 			
-			$("#lblGPSLatitude").text(latitude);
-			$("#lblGPSLongitude").text(longitude);
+			NEWINCIDENT.FillLatLong(latitude, longitude);
 			
 			if(latitude.toUpperCase()!="NO LOCATION" && longitude.toUpperCase()!="NO LOCATION")
 			{
@@ -760,8 +757,7 @@ NEWINCIDENT.getLocation2 = function(IncidentID)
 			console.log("latitude:"+latitude);
 			console.log("longitude:"+longitude);
 
-			$("#lblGPSLatitude").text(latitude);
-			$("#lblGPSLongitude").text(longitude);
+			NEWINCIDENT.FillLatLong(latitude, longitude);
     	}, 100);
 		return;
 	}
@@ -775,8 +771,7 @@ NEWINCIDENT.isChanged = "false";
 NEWINCIDENT.pushLocation = function(lat, lng, isChanged)
 {
 	NEWINCIDENT.isChanged = isChanged;
-	$("#lblGPSLatitude").text(lat);
-	$("#lblGPSLongitude").text(lng);
+	NEWINCIDENT.FillLatLong(lat, lng);
 	NEWINCIDENT.saveExistingIncident();
 }
 NEWINCIDENT.getLocation_success = function(response)
@@ -802,8 +797,7 @@ NEWINCIDENT.getLocation_success = function(response)
 			var location=response.split(',');
     		var latitude=location[0];
     		var longitude=location[1];	
-    		$("#lblGPSLatitude").text(latitude);
-			$("#lblGPSLongitude").text(longitude);
+    		NEWINCIDENT.FillLatLong(latitude, longitude);
 		}
 	}
 	$("#lblConfirmationMsg").text("GPS Location Updated!")
@@ -1158,4 +1152,23 @@ NEWINCIDENT.success_tp = function(selectedDate)
 NEWINCIDENT.failure_tp = function(selectedDate)
 {
 	alert(selectedDate);
+};
+NEWINCIDENT.FillLatLong = function(lat, long)
+{
+    if(lat.length >10)
+    {
+        $("#lblGPSLatitude").text(lat.substring(0, 10));
+    }
+    else
+    {
+        $("#lblGPSLatitude").text(lat);
+    }
+    if(long.length >10)
+    {
+        $("#lblGPSLongitude").text(long.substring(0, 10));
+    }
+    else
+    {
+        $("#lblGPSLongitude").text(long);
+    }
 };

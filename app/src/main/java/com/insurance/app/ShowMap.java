@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
+import android.location.Location;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Bundle;
@@ -148,8 +149,6 @@ public class ShowMap extends Activity {
     public class ShowMapWrapper {
         public String APP_FOLDERNAME;
         public String incidentID;
-        public String innerlatitude;
-        public String innerlongitude;
         public Activity myAct;
         private WebView objWV;
 
@@ -167,12 +166,14 @@ public class ShowMap extends Activity {
         }
 
         public ShowMapWrapper(String lat, String lang, Activity myact, WebView objwv, String strIncidentID) {
-            this.innerlatitude = PdfObject.NOTHING;
-            this.innerlongitude = PdfObject.NOTHING;
+            ShowMap.this.latitude = PdfObject.NOTHING;
+            ShowMap.this.longitude = PdfObject.NOTHING;
             this.incidentID = PdfObject.NOTHING;
             this.APP_FOLDERNAME = "InsuranceAssist";
-            this.innerlatitude = lat;
-            this.innerlongitude = lang;
+
+            ShowMap.this.latitude = lat;
+            ShowMap.this.longitude = lang;
+
             this.myAct = myact;
             this.objWV = objwv;
             this.incidentID = strIncidentID;
@@ -182,6 +183,110 @@ public class ShowMap extends Activity {
             Log.e("SHOWMAP WRAPPER", "LAT" + platitude + ",LONG" + plongitude);
             ShowMap.this.latitude = platitude;
             ShowMap.this.longitude = plongitude;
+        }
+        public String CB_Success;
+        public String CB_failure;
+
+        public String getLocation(String incidentID, String successCB, String failureCB) {
+            Log.e("WRAPPER", "Request Reached Wrapper- getLocation");
+            String retVal = "Done";
+            this.CB_Success = successCB;
+            this.CB_failure = failureCB;
+            try {
+                File incidentDir = new File(APP_FOLDERNAME + File.separator + incidentID + File.separator + "data.json");
+                Log.e("Path", "Path" + incidentDir.getAbsolutePath() + ", isExists:" + incidentDir.exists());
+                if (!incidentDir.isFile() || !incidentDir.exists()) {
+                    return retVal;
+                }
+                FileReader reader = new FileReader(incidentDir.getAbsoluteFile());
+                BufferedReader bufferedReader = new BufferedReader(reader);
+                StringBuffer stringBuffer = new StringBuffer();
+                while (true) {
+                    String line = bufferedReader.readLine();
+                    if (line == null) {
+                        break;
+                    }
+                    stringBuffer.append(line).append("\n");
+                }
+                bufferedReader.close();
+                reader.close();
+                String defaultData = stringBuffer.toString();
+                JSONObject obj = new JSONObject(defaultData);
+                Log.d("GEOLOCATION", "Before Geo-location Fetch:");
+                GetLocation objGetLocation = new GetLocation(myAct);
+                if (objGetLocation.displayGpsStatus().booleanValue()) {
+                    Location location = objGetLocation.getLocationData();
+                    if (location != null)
+                    {
+                        //Trim the location data
+                        String lt = String.valueOf(location.getLatitude());
+                        String lng= String.valueOf(location.getLongitude());
+
+                        if(lt.length() >10) {
+                            lt = lt.substring(0, 10);
+                        }
+                        if(lng.length() >10)
+                        {
+                            lng =lng.substring(0, 10);
+                        }
+
+                        obj.put("GPSLatitude", lt);
+                        obj.put("GPSLongitude", lng);
+                        defaultData = obj.toString();
+                        retVal = lt + "," + lng;
+                        Log.d("Latitude", lt+"");
+                        Log.d("Longitude", lng+"");
+                    }
+                } else {
+                    retVal = "OFF";
+                }
+                File incidentDataFile = new File(APP_FOLDERNAME + File.separator + incidentID + File.separator + "data.json");
+                if (incidentDataFile.isAbsolute() && incidentDataFile.exists()) {
+                    incidentDataFile.delete();
+                }
+                incidentDataFile.createNewFile();
+                FileWriter fileWritter = new FileWriter(incidentDataFile, false);
+                BufferedWriter bufferWritter = new BufferedWriter(fileWritter);
+                bufferWritter.write(defaultData);
+                bufferWritter.close();
+                fileWritter.close();
+                invokeSuccessCallback(retVal);
+                return retVal;
+            } catch (Exception e) {
+                e.printStackTrace();
+                retVal = "ERROR";
+                invokeFailureCallback(retVal);
+                return retVal;
+            }
+        }
+
+        protected void invokeSuccessCallback(Object responseData) {
+            try {
+                invokeURL("javascript:" + this.CB_Success + "('" + responseData + "')");
+            } catch (Exception e) {
+            }
+        }
+
+        protected void invokeFailureCallback(String errorMessage) {
+            try {
+                invokeURL("javascript:" + this.CB_failure + "('" + errorMessage + "')");
+            } catch (Exception e) {
+            }
+        }
+
+        /**
+         * Used to unvoke the instant WebURL to send detials from Wrapper to Siebel.
+         */
+        public  void invokeURL(String webUrl) {
+            final String webResponseURL = webUrl;
+            Log.i("WRAPPER RES", "URL:"+webUrl);
+            this.myAct.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    // Log.e("IAWRapper", "INV_URL:" + webResponseURL);
+                    appWebView.loadUrl(webResponseURL);
+                }
+            });
         }
 
         public void saveImage(String imageData) {
@@ -216,9 +321,10 @@ public class ShowMap extends Activity {
 
         public void getShowLocation() {
             try {
-                Log.e("SHOWLOCATION", "Lat:" + this.innerlatitude + ", Long:" + this.innerlatitude + ", IncidentID:" + this.incidentID);
-                String webResponseURL = "javascript:SHOW_MYLOCATION.pushLocation('" + this.innerlatitude + "','" + this.innerlongitude + "')";
-                Log.e("SHOWLOCATION", "URL:" + webResponseURL);
+                Log.e("JOY", "Lat:" + ShowMap.this.latitude + ", Long:" + ShowMap.this.longitude + ", IncidentID:" + this.incidentID);
+                String webResponseURL = "javascript:SHOW_MYLOCATION.pushLocation('" + ShowMap.this.latitude + "','" + ShowMap.this.longitude
+                        + "','" + this.incidentID + "')";
+                Log.e("JOY", "URL:" + webResponseURL);
                 this.myAct.runOnUiThread(new C00171(webResponseURL));
             } catch (Exception e) {
                 e.printStackTrace();

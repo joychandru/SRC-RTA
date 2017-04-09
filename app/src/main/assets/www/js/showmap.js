@@ -69,16 +69,23 @@ SHOW_MYLOCATION.showLocation = function(latitude, longitude)
 	            	 if(latStr!=null && latStr!= undefined && latStr!="")
             		 {
 	            		 SHOW_MYLOCATION.isLocationChanged=true;
-	            		 latitude = latStr;	 
+	            		 latitude = latStr.toString();
             		 }
 	            	 if(lngStr!=null && lngStr!= undefined && lngStr!="")
             		 {
 	            		 SHOW_MYLOCATION.isLocationChanged=true;
-	            		 longitude = lngStr;	 
+	            		 longitude = lngStr.toString();
             		 }
-	            	 
-	            	 //alert(latitude + "," + longitude);
-		        	 
+
+		        	 if(latitude.length >10)
+                     {
+                         latitude= latitude.substring(0, 10);
+                     }
+                     if(longitude.length >10)
+                     {
+                         longitude =longitude.substring(0, 10);
+                     }
+
 		        	 sessionStorage.changedLat =latitude;
 		        	 sessionStorage.changedLng=longitude;
 		        	 $("#txtSetLat").val(latitude);
@@ -86,7 +93,6 @@ SHOW_MYLOCATION.showLocation = function(latitude, longitude)
 	            	 
 		     		 SHOW_MYLOCATION.showLocation(latitude, longitude);
 	            	 SHOW_MYLOCATION.showStaticLocation(latitude, longitude);
-	            	 
 	            	 Wrapper.pushLocation(latitude,longitude);
 	            	 
 		        	 //Read lat and long values and call map view function
@@ -188,6 +194,8 @@ SHOW_MYLOCATION.showStaticLocation = function(latitude, longitude)
 {
 	try
 	{
+	    //alert("latitude=>" + latitude);
+	    //alert("Show Static location");
 		var img = document.getElementById("mapView");
 		//get height and width
 		var width = img.clientWidth;
@@ -217,17 +225,20 @@ SHOW_MYLOCATION.showStaticLocation = function(latitude, longitude)
 		alert(e);
 	}
 }
-SHOW_MYLOCATION.pushLocation = function(latitude, longitude)
+SHOW_MYLOCATION.pushLocation = function(latitude, longitude, incidentID)
 {
+    alert("Info: Your previously saved location will be shown by default! \n You can either refresh the current location or manually choose location to update.")
 	SHOW_MYLOCATION.isLocationChanged=false;
 	sessionStorage.changedLat =latitude;
 	sessionStorage.changedLng=longitude;
+	sessionStorage.IncidentID = incidentID;
 	
 	console.log(latitude + "," + longitude);
 	
 	$("#txtSetLat").val(latitude);
 	$("#txtSetLong").val(longitude);
-	
+	//alert("Push Location:" + SHOW_MYLOCATION.isStatcMap + "==>" + latitude);
+
 	if(SHOW_MYLOCATION.isStatcMap == true)
 	{
 		SHOW_MYLOCATION.showStaticLocation(latitude, longitude);
@@ -252,7 +263,7 @@ SHOW_MYLOCATION.btnStatic_click =function()
 	
 	SHOW_MYLOCATION.isStatcMap = true;
 
-	if(SHOW_MYLOCATION.isLocationChanged==false)
+	/*if(SHOW_MYLOCATION.isLocationChanged==false)
 	{
 		setTimeout(function(){
 			Wrapper.getShowLocation();
@@ -263,40 +274,106 @@ SHOW_MYLOCATION.btnStatic_click =function()
 		SHOW_MYLOCATION.showStaticLocation(
 		sessionStorage.changedLat, 
 		sessionStorage.changedLng);
-	}
+	}*/
+
+	//alert(sessionStorage.IncidentID);
+    	var responseWrapper = Wrapper.getLocation(sessionStorage.IncidentID,
+            		"SHOW_MYLOCATION.getLocation_success",
+            		"NEWINCIDENT.getLocation_failure");
 };
 SHOW_MYLOCATION.btnDynamic_click =function()
 {
 	$("#mapView2").addClass("displayShow");
-	$("#mapView1").removeClass("displayShow");
+	$("#mapView").removeClass("displayShow");
 	
 	$(".buttonDynamic").addClass("selectedButton");
 	$(".buttonStatic").removeClass("selectedButton");
 	
 	SHOW_MYLOCATION.isStatcMap = false;
-	
+	//alert("Is Location changed dynamic:" + SHOW_MYLOCATION.isLocationChanged);
 	if(SHOW_MYLOCATION.isLocationChanged==false)
 	{
 		setTimeout(function(){
 			Wrapper.getShowLocation();
 		}, 1000);
 	}
-	else 
+	else
 	{
-		SHOW_MYLOCATION.showStaticLocation(
+	    SHOW_MYLOCATION.showLocation(sessionStorage.changedLat,
+                                     		sessionStorage.changedLng);
+		/*SHOW_MYLOCATION.showStaticLocation(
 		sessionStorage.changedLat, 
-		sessionStorage.changedLng);
+		sessionStorage.changedLng);*/
 	}
 };
 SHOW_MYLOCATION.btnSetLocation_click =function()
 {
-	var lat= $("#txtSetLat").val();
+	/*var lat= $("#txtSetLat").val();
 	var long= $("#txtSetLong").val();
 	SHOW_MYLOCATION.isLocationChanged=true;
 	sessionStorage.changedLat =lat;
 	sessionStorage.changedLng=long;
 	Wrapper.pushLocation(lat,long);
-	SHOW_MYLOCATION.showStaticLocation(lat,long);
+	SHOW_MYLOCATION.showStaticLocation(lat,long);*/
+
+    //alert(sessionStorage.IncidentID);
+	var responseWrapper = Wrapper.getLocation(sessionStorage.IncidentID,
+        		"SHOW_MYLOCATION.getLocation_success",
+        		"NEWINCIDENT.getLocation_failure");
+};
+SHOW_MYLOCATION.getLocation_failure = function(response)
+{
+    alert("Error:"+ response);
+};
+SHOW_MYLOCATION.getLocation_success = function(response)
+{
+    if(response =="OFF")
+    	{
+    		alert("Switch ON GPS to update Location");
+    		var latitude="No Location";
+    		var longitude="No Location";
+    	}
+    	else if(response=="NO")
+    	{
+    		 alert("No Location details found.");
+    		 $("#lblGPSLatitude").text("No Location");
+    		 $("#lblGPSLongitude").text("No Location");
+    	}
+    	else
+    	{
+    		//alert(response);
+    		//Show Location in Map
+    		if(response.split(",").length == 2)
+    		{
+    			var location=response.split(',');
+        		var latitude=location[0];
+        		var longitude=location[1];
+
+                $("#txtSetLat").val(latitude);
+                $("#txtSetLong").val(longitude);
+
+                SHOW_MYLOCATION.isLocationChanged=true;
+                sessionStorage.changedLat =latitude;
+                sessionStorage.changedLng=longitude;
+                Wrapper.pushLocation(latitude,longitude);
+                SHOW_MYLOCATION.showStaticLocation(
+                                    sessionStorage.changedLat,
+                                    sessionStorage.changedLng);
+
+                /*if(SHOW_MYLOCATION.isLocationChanged==false)
+                {
+                    setTimeout(function(){
+                        Wrapper.getShowLocation();
+                    }, 1000);
+                }
+                else
+                {
+                    SHOW_MYLOCATION.showStaticLocation(
+                    sessionStorage.changedLat,
+                    sessionStorage.changedLng);
+                }*/
+    		}
+    	}
 };
 
 $(document).ready(function()

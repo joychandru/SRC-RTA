@@ -30,17 +30,19 @@
 		</div>
 		<div class="mainContent">
 			<div class="buttonBox">
-				<input type="button" class="buttonStatic selectedButton" value="My Location"/>
-				<input type="button" class="buttonDynamic" value="Choose Location"/>
+				<input type="button" class="buttonStatic selectedButton" value="Refresh My Location"/>
+				<input type="button" class="buttonDynamic" value="Choose Location Manually"/>
 			</div>
-			<div class="buttonBox">
-				<input type="number" class="txtlat" value="" placeholder="lattitude" id="txtSetLat"/>
-				<input type="number" class="txtlong" value="" placeholder="longitude" id="txtSetLong"/>
-				<input type="button" class="btnSetLocation" value="Refresh" id="btnSetLocation"/>
+			<div class="buttonBox" style="text-align:center;padding-bottom:15px !important;z-index:-1;">
+				<input type="number" class="txtlat" value="" placeholder="lattitude" id="txtSetLat" readonly="true"
+					   style="background-color:lightgray;text-align:center;border-style: dotted;color:red;"/>
+				<input type="number" class="txtlong" value="" placeholder="longitude" id="txtSetLong" readonly="true"
+					   style="background-color:lightgray;text-align:center;border-style: dotted;color:red;"/>
+				<input type="button" class="btnSetLocation" value="Refresh" id="btnSetLocation" style="display:none;"/>
 			</div>
-			<img class="mapArea" id="mapView"></img>
+			<img class="mapArea" id="mapView" style="margin-top:5px;"></img>
 			<!-- <div class="mapArea display" id="mapView">Map Area</div> -->
-			<div class="mapArea displayHide" id="mapView2">Loading..</div>
+			<div class="mapArea displayHide" id="mapView2" style="margin-top:4px;">Loading..</div>
 			<!-- <div class="mapArea" id="mapView">Map Area</div>
 			<img src="https://maps.googleapis.com/maps/api/staticmap?center=40.702147,-74.015794&zoom=13&size=300x400&maptype=roadmap
 &markers=color:blue%7Clabel:S%7C40.702147,-74.015794"/> -->

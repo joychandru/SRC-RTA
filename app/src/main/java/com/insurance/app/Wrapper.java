@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.provider.ContactsContract.Contacts;
 import android.telephony.SmsManager;
 import android.util.Log;
+import android.util.StringBuilderPrinter;
 import android.webkit.WebView;
 import android.widget.DatePicker;
 import android.widget.TimePicker;
@@ -58,17 +59,35 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.X509TrustManager;
+
+import static android.R.attr.data;
 
 public class Wrapper {
     public static String APP_FOLDERNAME = null;
@@ -840,13 +859,26 @@ public class Wrapper {
                 GetLocation objGetLocation = new GetLocation(myActivity);
                 if (objGetLocation.displayGpsStatus().booleanValue()) {
                     Location location = objGetLocation.getLocationData();
-                    if (location != null) {
-                        includeLocation.put("GPSLatitude", location.getLatitude());
-                        includeLocation.put("GPSLongitude", location.getLongitude());
+                    if (location != null)
+                    {
+                        //Trim the location data
+                        String lt = String.valueOf(location.getLatitude());
+                        String lng= String.valueOf(location.getLongitude());
+
+                        if(lt.length() >10) {
+                            lt = lt.substring(0, 10);
+                        }
+                        if(lng.length() >10)
+                        {
+                            lng =lng.substring(0, 10);
+                        }
+
+                        includeLocation.put("GPSLatitude", lt);
+                        includeLocation.put("GPSLongitude", lng);
                         defaultData = includeLocation.toString();
-                        retVal = location.getLatitude() + "," + location.getLongitude();
-                        Log.d("Latitude", location.getLatitude()+"");
-                        Log.d("Longitude", location.getLongitude()+"");
+                        retVal = lt + "," + lng;
+                        Log.d("Latitude",lt+"");
+                        Log.d("Longitude", lng+"");
                     }
                 } else {
                     retVal = "NO";
@@ -942,7 +974,7 @@ public class Wrapper {
      */
     public static void invokeURL(String webUrl) {
         final String webResponseURL = webUrl;
-        Log.e("WRAPPER RES", "URL:"+webUrl);
+        Log.i("WRAPPER RES", "URL:"+webUrl);
         myActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -1499,6 +1531,110 @@ public class Wrapper {
             Log.e("WRAPPER INBOUND", "CB Methods:" + CB_Success_SMS + "," + CB_failure_SMS);
             myActivity.startActivityForResult(new Intent("android.intent.action.PICK", Contacts.CONTENT_URI), Constants.REQUEST_CODE_PICK_CONTACT);
         } catch (Exception e) {
+        }
+    }
+
+    /*
+    This method will help to get emergency contact details for Nearest Hospital, Nearest Police Station and Fire Station
+     */
+    public boolean GetEmergencyContactDetails(String latitude, String longitude,  String successCB, String failureCB){
+        this.CB_Success = successCB;
+        this.CB_failure = failureCB;
+        (new EmergencyContactTask(latitude, longitude)).execute();
+        return true;
+    }
+
+    //Async Task for Fetching Emergency Contact details
+    class EmergencyContactTask extends AsyncTask<String, String, Boolean> {
+        private String latitude;
+        private String longitude;
+        private StringBuilder sbOutput = new StringBuilder();
+
+        EmergencyContactTask(String lat, String lang) {
+            this.latitude = lat;
+            this.longitude = lang;
+        }
+
+        protected void onPreExecute() {
+            super.onPreExecute();
+            Utility.showActivityIndicator(Wrapper.myActivity, "Searching..", null);
+        }
+
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            BufferedReader reader = null;
+            try {
+                String urlStr = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=-33.8670522,151.1957362&radius=500&type=restaurant&keyword=cruise&key=AIzaSyAd7H1BlaIwjvNQYwTzGd9AhWPHpKztM8g";
+                URL url = new URL(urlStr);
+
+                trustEveryone();
+
+                URLConnection conn = url.openConnection();
+                conn.setDoOutput(true);
+                conn.setDoInput(true);
+                conn.setReadTimeout(10000);
+                conn.setConnectTimeout(15000);
+                conn.addRequestProperty("Content-Type", "application/json");
+                //conn.connect();
+                InputStream stream = conn.getInputStream();
+                InputStreamReader streamreader = new InputStreamReader(stream);
+                reader = new BufferedReader(streamreader);
+                String line = null;
+
+                while((line = reader.readLine()) != null)
+                {
+                    // Append server response in string
+                    sbOutput.append(line + "");
+                }
+                Log.i("JOY", "Content Success." + sbOutput.toString().length());
+            } catch (Exception exp) {
+                Log.i("JOY", "ERROR:" + exp.getMessage());
+                Wrapper.this.invokeFailureCallback("Failed Searching Contacts");
+                return false;
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception ex) {
+                    }
+                }
+            }
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if(aBoolean) {
+                Wrapper.this.invokeSuccessCallback("Success");// + sbOutput.toString());
+                Log.i("WRAPPER", "On Post Execute");
+            }
+            Utility.hideActivityIndicator();
+        }
+    }
+
+    private void trustEveryone() {
+        try {
+            Log.i("JOY", "Trusting All host..");
+            HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier(){
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }});
+            SSLContext context = SSLContext.getInstance("TLS");
+            context.init(null, new X509TrustManager[]{new X509TrustManager(){
+                public void checkClientTrusted(X509Certificate[] chain,
+                                               String authType) throws CertificateException {}
+                public void checkServerTrusted(X509Certificate[] chain,
+                                               String authType) throws CertificateException {}
+                public X509Certificate[] getAcceptedIssuers() {
+                    return new X509Certificate[0];
+                }}}, new SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(
+                    context.getSocketFactory());
+
+            Log.i("JOY", "Host Trusted All");
+        } catch (Exception e) { // should never happen
+            e.printStackTrace();
         }
     }
 }
