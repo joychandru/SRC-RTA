@@ -778,13 +778,13 @@ NEWINCIDENT.getLocation_success = function(response)
 {
 	if(response =="OFF")
 	{
-		alert("Switch ON GPS to update Location");
+		//alert("Switch ON GPS to update Location");
 		var latitude="No Location";
 		var longitude="No Location";	
 	} 
 	else if(response=="NO")
 	{
-		 alert("No Location details found.");
+		 //alert("No Location details found.");
 		 $("#lblGPSLatitude").text("No Location");
 		 $("#lblGPSLongitude").text("No Location");
 	} 
@@ -1155,17 +1155,17 @@ NEWINCIDENT.failure_tp = function(selectedDate)
 };
 NEWINCIDENT.FillLatLong = function(lat, long)
 {
-    if(lat.length >10)
+    if(lat.length >12)
     {
-        $("#lblGPSLatitude").text(lat.substring(0, 10));
+        $("#lblGPSLatitude").text(lat.substring(0, 12));
     }
     else
     {
         $("#lblGPSLatitude").text(lat);
     }
-    if(long.length >10)
+    if(long.length >12)
     {
-        $("#lblGPSLongitude").text(long.substring(0, 10));
+        $("#lblGPSLongitude").text(long.substring(0, 12));
     }
     else
     {

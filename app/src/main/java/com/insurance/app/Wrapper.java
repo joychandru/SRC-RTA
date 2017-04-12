@@ -880,6 +880,10 @@ public class Wrapper {
                         Log.d("Latitude",lt+"");
                         Log.d("Longitude", lng+"");
                     }
+                    else
+                    {
+                        retVal="NO";
+                    }
                 } else {
                     retVal = "NO";
                 }
@@ -1355,6 +1359,10 @@ public class Wrapper {
                     retVal = location.getLatitude() + "," + location.getLongitude();
                     Log.d("Latitude", location.getLatitude()+"");
                     Log.d("Longitude", location.getLongitude()+"");
+                }
+                else
+                {
+                    retVal="NO";
                 }
             } else {
                 retVal = "OFF";
