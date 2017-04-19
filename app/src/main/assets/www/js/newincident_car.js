@@ -713,48 +713,66 @@ NEWINCIDENT.getLocation = function(IncidentID)
 };
 NEWINCIDENT.getLocation2 = function(IncidentID)
 {
-	//show map
-    //**************TEST *****************
-    if(sessionStorage.IncidentType!="EDIT" && NEWINCIDENT.isChanged!= "true")
+    if($("#lblGPSLatitude").text() =="No Location" && $("#lblGPSLongitude").text() =="No Location" && Wrapper.LocationStatus())
     {
-    	var responseWrapper = Wrapper.getLocation(sessionStorage.IncidentID,
-    		"NEWINCIDENT.getLocation_success",
-    		"NEWINCIDENT.getLocation_failure");
-
-    	setTimeout(function()
-    	{
-    		if(responseWrapper =="OFF")
-	    	{
-    			alert("Switch ON GPS to update Location");
-	    		var latitude="No Location";
-	    		var longitude="No Location";
-			}
-    		else if(responseWrapper=="NO")
-	    	{
-    			alert("No Location details found.");
-	    		var latitude="No Location";
-	    		var longitude="No Location";
-			}
-	    	else
-	    	{
-	    		var location=responseWrapper.split(',');
-	    		var latitude=location[0];
-	    		var longitude=location[1];
-			}
-
-			console.log(responseWrapper);
-			console.log("latitude:"+latitude);
-			console.log("longitude:"+longitude);
-
-            NEWINCIDENT.FillLatLong(latitude, longitude);
-    	}, 100);
-		return;
-	}
-    else if(sessionStorage.IncidentType =="EDIT" &&  $("#lblGPSLatitude").text().toUpperCase()=="NO LOCATION" &&
-    		$("#lblGPSLongitude").text().toUpperCase()=="NO LOCATION")
-    {
-    	alert("This incident is already created you cannot update location.");
+         Wrapper.ShowGetLocationProgress();
+         var counter =0;
+         var myVar = setInterval(function(){
+            counter= counter +1;
+            if(counter>=5)
+            {
+                clearInterval(myVar);
+                Wrapper.HideGetLocationProgress();
+                NEWINCIDENT.REFRESH();
+            }
+         }, 1000);
     }
+    else
+    {
+       NEWINCIDENT.REFRESH();
+    }
+};
+NEWINCIDENT.REFRESH = function(){
+ if(sessionStorage.IncidentType!="EDIT" && NEWINCIDENT.isChanged!= "true")
+        {
+            var responseWrapper = Wrapper.getLocation(sessionStorage.IncidentID,
+                "NEWINCIDENT.getLocation_success",
+                "NEWINCIDENT.getLocation_failure");
+
+            setTimeout(function()
+            {
+                if(responseWrapper =="OFF")
+                {
+                    alert("Switch ON GPS to update Location");
+                    var latitude="No Location";
+                    var longitude="No Location";
+                }
+                else if(responseWrapper=="NO")
+                {
+                    alert("No Location details found.");
+                    var latitude="No Location";
+                    var longitude="No Location";
+                }
+                else
+                {
+                    var location=responseWrapper.split(',');
+                    var latitude=location[0];
+                    var longitude=location[1];
+                }
+
+                console.log(responseWrapper);
+                console.log("latitude:"+latitude);
+                console.log("longitude:"+longitude);
+
+                NEWINCIDENT.FillLatLong(latitude, longitude);
+            }, 100);
+            return;
+        }
+        else if(sessionStorage.IncidentType =="EDIT" &&  $("#lblGPSLatitude").text().toUpperCase()=="NO LOCATION" &&
+                $("#lblGPSLongitude").text().toUpperCase()=="NO LOCATION")
+        {
+            alert("This incident is already created you cannot update location.");
+        }
 };
 NEWINCIDENT.isChanged = "false";
 NEWINCIDENT.pushLocation = function(lat, lng, isChanged)

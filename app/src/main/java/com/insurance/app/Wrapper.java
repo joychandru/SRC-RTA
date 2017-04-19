@@ -1349,7 +1349,7 @@ public class Wrapper {
             String defaultData = stringBuffer.toString();
             JSONObject obj = new JSONObject(defaultData);
             Log.d("GEOLOCATION", "Before Geo-location Fetch:");
-            GetLocation objGetLocation = new GetLocation(myActivity);
+            GetLocation objGetLocation = new GetLocation(myActivity.getApplicationContext());
             if (objGetLocation.displayGpsStatus().booleanValue()) {
                 Location location = objGetLocation.getLocationData();
                 if (location != null) {
@@ -1393,7 +1393,7 @@ public class Wrapper {
     public String getLocationData() {
         JSONObject data = new JSONObject();
         try {
-            GetLocation objGetLocation = new GetLocation(myActivity);
+            GetLocation objGetLocation = new GetLocation(myActivity.getApplicationContext());
             if (!objGetLocation.displayGpsStatus().booleanValue()) {
                 return "OFF";
             }
@@ -1644,5 +1644,20 @@ public class Wrapper {
         } catch (Exception e) { // should never happen
             e.printStackTrace();
         }
+    }
+
+    public void ShowGetLocationProgress(){
+        Utility.showActivityIndicator(Wrapper.myActivity,"Getting location..","My Location");
+    }
+
+    public void HideGetLocationProgress()
+    {
+        Utility.hideActivityIndicator();
+    }
+
+    public boolean LocationStatus()
+    {
+        GetLocation objGetLocation = new GetLocation(Wrapper.myActivity);
+        return objGetLocation.displayGpsStatus().booleanValue();
     }
 }

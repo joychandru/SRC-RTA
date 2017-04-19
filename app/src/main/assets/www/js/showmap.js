@@ -277,9 +277,13 @@ SHOW_MYLOCATION.btnStatic_click =function()
 	}*/
 
 	//alert(sessionStorage.IncidentID);
-    	var responseWrapper = Wrapper.getLocation(sessionStorage.IncidentID,
-            		"SHOW_MYLOCATION.getLocation_success",
-            		"NEWINCIDENT.getLocation_failure");
+
+               var responseWrapper = Wrapper.getLocation(sessionStorage.IncidentID,
+                       		"SHOW_MYLOCATION.getLocation_success",
+                       		"NEWINCIDENT.getLocation_failure");
+
+
+
 };
 SHOW_MYLOCATION.btnDynamic_click =function()
 {
@@ -316,10 +320,12 @@ SHOW_MYLOCATION.btnSetLocation_click =function()
 	Wrapper.pushLocation(lat,long);
 	SHOW_MYLOCATION.showStaticLocation(lat,long);*/
 
+
+    var responseWrapper = Wrapper.getLocation(sessionStorage.IncidentID,
+                   		"SHOW_MYLOCATION.getLocation_success",
+                   		"NEWINCIDENT.getLocation_failure");
     //alert(sessionStorage.IncidentID);
-	var responseWrapper = Wrapper.getLocation(sessionStorage.IncidentID,
-        		"SHOW_MYLOCATION.getLocation_success",
-        		"NEWINCIDENT.getLocation_failure");
+
 };
 SHOW_MYLOCATION.getLocation_failure = function(response)
 {
@@ -330,14 +336,14 @@ SHOW_MYLOCATION.getLocation_success = function(response)
     if(response =="OFF")
     	{
     		alert("Switch ON GPS to update Location");
-    		var latitude="No Location";
-    		var longitude="No Location";
+    		$("#txtSetLat").val("No Location");
+            $("#txtSetLong").val("No Location");
     	}
     	else if(response=="NO")
     	{
     		 alert("No Location details found.");
-    		 $("#lblGPSLatitude").text("No Location");
-    		 $("#lblGPSLongitude").text("No Location");
+    		 $("#txtSetLat").val("No Location");
+    		 $("#txtSetLong").val("No Location");
     	}
     	else
     	{

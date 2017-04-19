@@ -500,4 +500,19 @@ public class ShowMap extends Activity {
             return false;
         }
     }
+
+    public void ShowGetLocationProgress(){
+        Utility.showActivityIndicator(myContext,"Getting location..","My Location");
+    }
+
+    public void HideGetLocationProgress()
+    {
+        Utility.hideActivityIndicator();
+    }
+
+    public boolean LocationStatus()
+    {
+        GetLocation objGetLocation = new GetLocation(myContext);
+        return objGetLocation.displayGpsStatus().booleanValue();
+    }
 }

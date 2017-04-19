@@ -724,6 +724,27 @@ NEWINCIDENT.getLocation = function(IncidentID)
 };
 NEWINCIDENT.getLocation2 = function(IncidentID)
 {
+    if($("#lblGPSLatitude").text() =="No Location" && $("#lblGPSLongitude").text() =="No Location" && Wrapper.LocationStatus())
+    {
+         Wrapper.ShowGetLocationProgress();
+         var counter =0;
+         var myVar = setInterval(function(){
+            counter= counter +1;
+            if(counter>=5)
+            {
+                clearInterval(myVar);
+                Wrapper.HideGetLocationProgress();
+                NEWINCIDENT.REFRESH();
+            }
+         }, 1000);
+    }
+    else
+    {
+       NEWINCIDENT.REFRESH();
+    }
+};
+
+NEWINCIDENT.REFRESH = function(){
 	//show map
     //**************TEST *****************
     if(sessionStorage.IncidentType!="EDIT" && NEWINCIDENT.isChanged!= "true")
