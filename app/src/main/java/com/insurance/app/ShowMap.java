@@ -330,6 +330,11 @@ public class ShowMap extends Activity {
                 e.printStackTrace();
             }
         }
+
+        public void GoBack()
+        {
+            onBackPressed();
+        }
     }
 
     public ShowMap() {
@@ -515,4 +520,6 @@ public class ShowMap extends Activity {
         GetLocation objGetLocation = new GetLocation(myContext);
         return objGetLocation.displayGpsStatus().booleanValue();
     }
+
+
 }

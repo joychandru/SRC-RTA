@@ -329,3 +329,31 @@ a
 	font-weight:bold;
 	border-radius:6px 6px 6px 6px;
 }
+.nav_right:after
+{
+  position:absolute;
+  content:"Next";
+  margin:0 auto;
+  left:11px;
+  top:30px;
+  color:black;
+  font-size:16px;
+  text-shadow:1px 1px 2px #fff;
+}
+.mainContent a.nav_right
+{
+	display:block;
+	width:60px;
+	height:35px;
+	position:absolute;
+	top:50%;
+	right:-12px;
+	background: url("../images/nav_right.png") center center;
+	background-size:60% 105%;
+	background-repeat:no-repeat;
+	z-index:1000;
+}
+.mainContent span.nav_right:active
+{
+	background-size:60% 100% !important;
+}

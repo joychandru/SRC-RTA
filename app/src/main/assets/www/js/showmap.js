@@ -12,6 +12,13 @@ SHOW_MYLOCATION.btnHome_click = function(e)
 	if(e) e.preventDefault();
 	window.location = COMMON.parentPage;
 };
+SHOW_MYLOCATION.btnNext_click = function(e)
+{
+	if(e) e.preventDefault();
+	//Go back to prev screen
+	//alert(Wrapper.GoBack);
+	Wrapper.GoBack();
+};
 var markersArray = [];
 SHOW_MYLOCATION.clearOverlays = function() {
 	  if (markersArray) {
@@ -34,7 +41,7 @@ SHOW_MYLOCATION.showLocation = function(latitude, longitude)
 	         //google.maps.event.trigger(mymapBranchView, 'resize');
 	         
 	         google.maps.event.addListenerOnce(mymapBranchView, 'idle', function(){
-	        	alert("Location is successfully loaded");
+	        	//alert("Location is successfully loaded");
 	        	});
 	         
 	        var viewport = {
@@ -227,7 +234,7 @@ SHOW_MYLOCATION.showStaticLocation = function(latitude, longitude)
 }
 SHOW_MYLOCATION.pushLocation = function(latitude, longitude, incidentID)
 {
-    alert("Info: Your previously saved location will be shown by default! \n You can either refresh the current location or manually choose location to update.")
+    //alert("Info: Your previously saved location will be shown by default! \n You can either refresh the current location or manually choose location to update.")
 	SHOW_MYLOCATION.isLocationChanged=false;
 	sessionStorage.changedLat =latitude;
 	sessionStorage.changedLng=longitude;
@@ -397,4 +404,6 @@ $(document).ready(function()
 	$(".buttonStatic").on("click", SHOW_MYLOCATION.btnStatic_click);	
 	$(".buttonDynamic").on("click", SHOW_MYLOCATION.btnDynamic_click);	
 	$("#btnSetLocation").on("click", SHOW_MYLOCATION.btnSetLocation_click);
+
+	$(".nav_right").on("click", SHOW_MYLOCATION.btnNext_click);
 });

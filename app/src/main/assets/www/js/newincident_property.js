@@ -1,5 +1,5 @@
 var NEWINCIDENT={};
-NEWINCIDENT.activeBox = 1;
+NEWINCIDENT.activeBox = 0;
 NEWINCIDENT.isSwipeRequied = false;
 
 //**********VEHICLE******************/
@@ -119,16 +119,16 @@ NEWINCIDENT.btnHome_click = function(e)
 NEWINCIDENT.btnNavLeft_click = function(e)
 {
 	if(e) e.preventDefault();
-	if(NEWINCIDENT.activeBox==1)
+	if(NEWINCIDENT.activeBox==0)
 	{
 		//Go to back
 		COMMON.backPressed();
 		return;
 	}
 	
-	if(NEWINCIDENT.activeBox <1)
+	if(NEWINCIDENT.activeBox <0)
 	{
-		NEWINCIDENT.activeBox==1;
+		NEWINCIDENT.activeBox==0;
 		//$(".nav_left").hide();
 		$(".nav_right").show();
 	}
@@ -143,7 +143,7 @@ NEWINCIDENT.btnNavLeft_click = function(e)
 			NEWINCIDENT.activeBox--;
 		}*/
 	}
-	if(NEWINCIDENT.activeBox==1)
+	if(NEWINCIDENT.activeBox==0)
 	{
 		$(".nav_right").show();
 		//$(".nav_left").hide();
@@ -166,7 +166,7 @@ NEWINCIDENT.btnNavRight_click = function(e)
 
 	if(NEWINCIDENT.activeBox==6)
 	{
-		NEWINCIDENT.activeBox==1;
+		NEWINCIDENT.activeBox==0;
 		$(".nav_left").hide();
 		$(".nav_right").show();
 	}
@@ -1059,7 +1059,7 @@ $(document).ready(function()
 	});*/
 	
 	//alert(sessionStorage.activeIndex);
-	if(sessionStorage.activeIndex!=null && sessionStorage.activeIndex.length>0)
+	if(sessionStorage.activeIndex!=null && sessionStorage.activeIndex.length>=0)
 	{
 		var id= "#box" + sessionStorage.activeIndex;
 		$('#scroll_container').scrollTo($(id), 100);

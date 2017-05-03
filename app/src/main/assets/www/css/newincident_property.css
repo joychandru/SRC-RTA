@@ -119,7 +119,7 @@ a
 {
 	position:relative;
 	width:100%;
-	min-height:400px;
+	min-height:480px;
 	background-color:rgba(0,0,0,0);
 	border:0px solid red;
 	right:0px;
@@ -262,7 +262,7 @@ a
 {
 	transition: left 2s linear;
 	position:absolute;
-	top:100px;
+	top:60px;
 	bottom:0px;
 	font-size:13px;
 	-webkit-overflow-scrolling:touch;
@@ -423,17 +423,25 @@ a
 .getLocationDiv
 {
     margin-left:1%;
+     width:40px;
      height:40px;
      border:1px solid #A0B4AA;
-     border-radius:4px;
+     border-radius:20px;
      font-size:14px;
      text-shadow:0px 0px 2px #000;
      color:white;
      text-align:center;
-     background-color:#1EB2E2;
+
      display: -webkit-box;
      -webkit-box-align: center;
      -webkit-box-pack: center;
+     background: url("../images/sync.png"),url("../images/refresh.pn") center center;
+     background-repeat:no-repeat;
+     background-size:100% 100%;
+     background-color:white;
+}
+.getLocationDiv:active{
+background-color:black;
 }
 .incident_gps
 {
@@ -563,4 +571,11 @@ a
 
 #locContainer{
     display: -webkit-box;
+}
+
+.lblLatLang
+{
+padding-top:10px;
+color:#fff;
+font-weight:bold;"
 }
